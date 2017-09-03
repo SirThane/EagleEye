@@ -73,7 +73,7 @@ class Listeners:
 
     def formatted_nick(self, b, a, delim='?'):
         return f"{a.guild.name} | {a.guild.id}\n{delim*80}\n{a.name} | {a.id}\nBEFORE: {b.nick}\nAFTER:  " \
-               f"{a.nick}\n{delim*80}"
+               f"{a.nick}\n{delim*80}\n"
 
     def formatted_roles(self, m, r, x, delim='?'):
         return f"{m.guild.name} | {m.guild.id}\n{m.name} | {m.id}\n{delim*80}\nROLE {x}: {r}\n{delim*80}\n"
