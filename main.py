@@ -2,6 +2,7 @@ from discord.ext import commands
 from asyncio import sleep
 import discord
 import sys
+import shutil
 import redis
 import json
 
@@ -43,11 +44,20 @@ class Listeners:
 
     # Utility functions
 
+    @property
+    def w(self):
+        return shutil.get_terminal_size((80, 25)).columns
+
     def check_update(self):
+        w = self.w
+        print(f"{self.header('UPDATE', '+')}\nUpdating watch/ignore lists from database. . .\n{'+' * w}")
         self.watched_guilds = [int(g) for g in list(db.smembers("eagleeye:watched_guilds"))]
-        print(f"Guilds list updated: {', '.join([str(g) for g in self.watched_guilds])}")
+        print(f"  Watched guilds list updated: {', '.join([str(g) for g in self.watched_guilds])}")
         self.ignored_channels = [int(c) for c in list(db.smembers("eagleeye:ignored_channels"))]
-        print(f"Ignored channels list updated: {', '.join([str(c) for c in self.ignored_channels])}\n")
+        print(f"Ignored channels list updated: {', '.join([str(c) for c in self.ignored_channels])}")
+        self.ignored_members = [int(c) for c in list(db.smembers("eagleeye:ignored_members"))]
+        print(f"   Ignored users list updated: {', '.join([str(c) for c in self.ignored_members])}")
+        print(f"{'+' * w}\n")
 
     async def on_timer_update(self, s):
         if s % 300 == 0:
@@ -60,23 +70,6 @@ class Listeners:
         for r in a.roles:
             if r not in b.roles:
                 return "ADDED", r.name
-
-    # Formatter functions
-
-    def formatted_message(self, m, delim='?'):
-        a = m.author
-        return f"{a.name} | {a.id}{f' | {a.nick}' if a.nick else ''}\n{m.guild.name} | {m.guild.id}\n" \
-               f"#{m.channel.name} | {m.channel.id}\n{delim*80}\n{m.content}\n{delim*80}\n"
-
-    def formatted_member(self, m, delim='?'):
-        return f"{m.guild.name} | {m.guild.id}\n{delim*80}\n{m.name} | {m.id}\n{delim*80}\n"
-
-    def formatted_nick(self, b, a, delim='?'):
-        return f"{a.guild.name} | {a.guild.id}\n{delim*80}\n{a.name} | {a.id}\nBEFORE: {b.nick}\nAFTER:  " \
-               f"{a.nick}\n{delim*80}\n"
-
-    def formatted_roles(self, m, r, x, delim='?'):
-        return f"{m.guild.name} | {m.guild.id}\n{m.name} | {m.id}\n{delim*80}\nROLE {x}: {r}\n{delim*80}\n"
 
     # Checks
 
@@ -95,31 +88,60 @@ class Listeners:
         else:
             return False
 
+    # Formatter functions
+
+    def header(self, title, delim='?'):
+        w = self.w
+        head = f"[ {title}{' ' * abs((w % 2) - (len(title) % 2))} ]"
+        wrap = f"{delim * ((w - len(head)) // 2)}"
+        return f"{wrap}{head}{wrap}"
+
+    def formatted_message(self, m, h, delim='?'):
+        a = m.author
+        nl = '\n'
+        if m.attachments:
+            atch = f"{self.header('ATTACHMENTS', delim)}\n{nl.join([a.url for a in m.attachments])}\n"
+        else:
+            atch = ""
+        print(f"{a.name} | {a.id}{f' | {a.nick}' if a.nick else ''}\n{m.guild.name} | {m.guild.id}\n"
+              f"#{m.channel.name} | {m.channel.id}\n{self.header(h, delim)}\n{m.content}\n{atch}{delim * self.w}\n")
+
+    def formatted_member(self, m, h, delim='?'):
+        print(f"{m.guild.name} | {m.guild.id}\n{self.header(h, delim)}\n{m.name} | {m.id}\n{delim * self.w}\n")
+
+    def formatted_nick(self, b, a, h, delim='?'):
+        print(f"{a.guild.name} | {a.guild.id}\n{self.header(h, delim)}\n{a.name} | {a.id}\nBEFORE: {b.nick}\n"
+              f"AFTER:  {a.nick}\n{delim * self.w}\n")
+
+    def formatted_roles(self, m, r, x, h, delim='?'):
+        print(f"{m.guild.name} | {m.guild.id}\n{m.name} | {m.id}\n{self.header(h, delim)}\nROLE {x}: {r}\n"
+              f"{delim * self.w}\n")
+
     # Listeners
 
     async def on_message(self, m):
         if self.m_check(m):
-            print(f"NEW MSG | {self.formatted_message(m, delim='=')}")
+            self.formatted_message(m, 'NEW MSG', delim='=')
 
     async def on_message_edit(self, b, a):
         if self.m_check(a):
-            print(f"MSG EDIT | {self.formatted_message(a, delim='#')}")
+            self.formatted_message(a, 'MSG EDIT', delim='#')
 
     async def on_message_delete(self, m):
         if self.m_check(m):
-            print(f"MSG DEL | {self.formatted_message(m, delim='X')}")
+            self.formatted_message(m, 'MSG DEL', delim='X')
 
     async def on_member_join(self, m):
         if self.guild_check(m.guild):
-            print(f"MEMBER JOIN | {self.formatted_member(m, delim='%')}")
+            self.formatted_member(m, 'MEMBER JOIN', delim='%')
 
     async def on_member_update(self, b, a):
         if self.guild_check(a.guild):
             if a.nick != b.nick:
-                print(f"NICK CHG | {self.formatted_nick(b, a, delim='@')}")
+                self.formatted_nick(b, a, 'NICK CHG', delim='@')
             if a.roles != b.roles:
                 x, r = self.role_change(b, a)
-                print(f"ROLE CHG | {self.formatted_roles(a, r, x, delim='&')}")
+                self.formatted_roles(a, r, x, 'ROLE CHG', delim='&')
 
 
 @bot.event
