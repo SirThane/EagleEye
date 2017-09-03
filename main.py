@@ -130,4 +130,7 @@ async def on_ready():
 
 
 if __name__ == "__main__":
-    bot.run(db.hget("selfbot:config:run", "token"), bot=False)
+    try:
+        bot.run(db.hget("selfbot:config:run", "token"), bot=False)
+    except KeyboardInterrupt:
+        bot.logout()
