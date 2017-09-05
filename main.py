@@ -71,6 +71,25 @@ class Listeners:
             if r not in b.roles:
                 return "ADDED", r.name
 
+    def handle_mentions(self, message):
+        content, members, roles, channels = message.content, [], [], []
+
+        for m in message.mentions:
+            content = content.replace(f"<@{m.id}>", f"@{m.nick if m.nick else m.name}")
+            content = content.replace(f"<@!{m.id}>", f"@{m.nick if m.nick else m.name}")
+            members.append((m.id, m.name))
+
+        for r in message.role_mentions:
+            content = content.replace(f"<@&{r.id}>", f"@{r.name}")
+            roles.append((r.id, r.name))
+
+        for c in message.channel_mentions:
+            content = content.replace(f"<#{c.id}>", f"#{c.name}")
+            roles.append((c.id, c.name))
+
+        return content, members, roles, channels
+
+
     # Checks
 
     def guild_check(self, guild):
@@ -97,14 +116,24 @@ class Listeners:
         return f"{wrap}{head}{wrap}"
 
     def send_formatted_message(self, m, h, delim='?'):
+        content, m_mentions, r_mentions, c_mentions = self.handle_mentions(m)
         a = m.author
         nl = '\n'
+        extra = ""
+        if m_mentions:
+            extra += f"{self.header('MEMBER MENTIONS', delim)}\n" \
+                     f"{nl.join([': '.join([str(i), n]) for i, n in m_mentions])}\n"
+        if r_mentions:
+            extra += f"{self.header('ROLE MENTIONS', delim)}\n" \
+                     f"{nl.join([': '.join([str(i), n]) for i, n in r_mentions])}\n"
+        if c_mentions:
+            extra += f"{self.header('CHANNEL MENTIONS', delim)}\n" \
+                     f"{nl.join([': '.join([str(i), n]) for i, n in c_mentions])}\n"
         if m.attachments:
-            atch = f"{self.header('ATTACHMENTS', delim)}\n{nl.join([a.url for a in m.attachments])}\n"
-        else:
-            atch = ""
+            extra += f"{self.header('ATTACHMENTS', delim)}\n{nl.join([a.url for a in m.attachments])}\n"
+
         print(f"{a.name} | {a.id}{f' | {a.nick}' if a.nick else ''}\n{m.guild.name} | {m.guild.id}\n"
-              f"#{m.channel.name} | {m.channel.id}\n{self.header(h, delim)}\n{m.content}\n{atch}{delim * self.w}\n")
+              f"#{m.channel.name} | {m.channel.id}\n{self.header(h, delim)}\n{content}\n{extra}{delim * self.w}\n")
 
     def send_formatted_member(self, m, h, delim='?'):
         print(f"{m.guild.name} | {m.guild.id}\n{self.header(h, delim)}\n{m.name} | {m.id}\n{delim * self.w}\n")
