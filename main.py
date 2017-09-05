@@ -148,7 +148,7 @@ class Listeners:
 async def on_ready():
     bot.loop.create_task(init_timed_events(bot))
     bot.add_cog(Listeners(bot))
-    await bot.change_presence(afk=True)
+    await bot.change_presence(status=discord.Status.idle, afk=True)
     print("Started successfully.\n")
 
 
