@@ -96,7 +96,7 @@ class Listeners:
         wrap = f"{delim * ((w - len(head)) // 2)}"
         return f"{wrap}{head}{wrap}"
 
-    def formatted_message(self, m, h, delim='?'):
+    def send_formatted_message(self, m, h, delim='?'):
         a = m.author
         nl = '\n'
         if m.attachments:
@@ -106,14 +106,14 @@ class Listeners:
         print(f"{a.name} | {a.id}{f' | {a.nick}' if a.nick else ''}\n{m.guild.name} | {m.guild.id}\n"
               f"#{m.channel.name} | {m.channel.id}\n{self.header(h, delim)}\n{m.content}\n{atch}{delim * self.w}\n")
 
-    def formatted_member(self, m, h, delim='?'):
+    def send_formatted_member(self, m, h, delim='?'):
         print(f"{m.guild.name} | {m.guild.id}\n{self.header(h, delim)}\n{m.name} | {m.id}\n{delim * self.w}\n")
 
-    def formatted_nick(self, b, a, h, delim='?'):
+    def send_formatted_nick(self, b, a, h, delim='?'):
         print(f"{a.guild.name} | {a.guild.id}\n{self.header(h, delim)}\n{a.name} | {a.id}\nBEFORE: {b.nick}\n"
               f"AFTER:  {a.nick}\n{delim * self.w}\n")
 
-    def formatted_roles(self, m, r, x, h, delim='?'):
+    def send_formatted_roles(self, m, r, x, h, delim='?'):
         print(f"{m.guild.name} | {m.guild.id}\n{m.name} | {m.id}\n{self.header(h, delim)}\nROLE {x}: {r}\n"
               f"{delim * self.w}\n")
 
@@ -121,33 +121,34 @@ class Listeners:
 
     async def on_message(self, m):
         if self.m_check(m):
-            self.formatted_message(m, 'NEW MSG', delim='=')
+            self.send_formatted_message(m, 'NEW MSG', delim='=')
 
     async def on_message_edit(self, b, a):
         if self.m_check(a):
-            self.formatted_message(a, 'MSG EDIT', delim='#')
+            self.send_formatted_message(a, 'MSG EDIT', delim='#')
 
     async def on_message_delete(self, m):
         if self.m_check(m):
-            self.formatted_message(m, 'MSG DEL', delim='X')
+            self.send_formatted_message(m, 'MSG DEL', delim='X')
 
     async def on_member_join(self, m):
         if self.guild_check(m.guild):
-            self.formatted_member(m, 'MEMBER JOIN', delim='%')
+            self.send_formatted_member(m, 'MEMBER JOIN', delim='%')
 
     async def on_member_update(self, b, a):
         if self.guild_check(a.guild):
             if a.nick != b.nick:
-                self.formatted_nick(b, a, 'NICK CHG', delim='@')
+                self.send_formatted_nick(b, a, 'NICK CHG', delim='@')
             if a.roles != b.roles:
                 x, r = self.role_change(b, a)
-                self.formatted_roles(a, r, x, 'ROLE CHG', delim='&')
+                self.send_formatted_roles(a, r, x, 'ROLE CHG', delim='&')
 
 
 @bot.event
 async def on_ready():
     bot.loop.create_task(init_timed_events(bot))
     bot.add_cog(Listeners(bot))
+    await bot.change_presence(afk=True)
     print("Started successfully.\n")
 
 
