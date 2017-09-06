@@ -80,7 +80,7 @@ class Listeners:
 
     @property
     def w(self):
-        return shutil.get_terminal_size((80, 25)).columns
+        return self.bot.w()
 
     def print_splash(self):
         print(self.banner)
@@ -133,7 +133,7 @@ class Listeners:
 
         for c in message.channel_mentions:
             content = content.replace(f"<#{c.id}>", f"#{c.name}")
-            roles.append((c.id, c.name))
+            channels.append((c.id, c.name))
 
         return content, members, roles, channels
 
