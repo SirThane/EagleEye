@@ -84,9 +84,9 @@ class Listeners:
 
     def print_splash(self):
         print(self.banner)
-        try:
-            owner = f'| User ID:   {bot.user.id}\n'
-        except:
+        if self.bot.owner:
+            owner = f'| Owner:     {bot.owner}\n'
+        else:
             owner = ""
         print(f'#-------------------------------#\n'
               f'| Successfully logged in.\n'
@@ -222,6 +222,11 @@ class Listeners:
 
 @bot.event
 async def on_ready():
+    try:
+        app_info = await bot.application_info()  # Bot Only
+        bot.owner = discord.utils.get(bot.get_all_members(), id=app_info.owner.id)  # Bot only
+    except:
+        bot.owner = None
     bot.loop.create_task(init_timed_events(bot))
     bot.add_cog(Listeners(bot))
     await sleep(1)
