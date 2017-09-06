@@ -18,7 +18,7 @@ except:
 
 
 bot = commands.Bot(command_prefix=")(90f3lkFDlEWo23nmROl24=R{;'afg4gf-", self_bot=True)
-
+bot.w = lambda x: shutil.get_terminal_size((80, 25)).columns
 
 @bot.listen()
 async def timer_update(seconds):
@@ -41,12 +41,60 @@ async def init_timed_events(bot):
 class Listeners:
     def __init__(self, bot):
         self.bot = bot
+        self.print_splash()
 
     # Utility functions
 
     @property
+    def banner(self):
+        if self.w >= 74:
+            return """
+8888888888                   888               8888888888                 
+888                          888               888                        
+888                          888               888                        
+8888888     8888b.   .d88b.  888  .d88b.       8888888   888  888  .d88b. 
+888            "88b d88P"88b 888 d8P  Y8b      888       888  888 d8P  Y8b
+888        .d888888 888  888 888 88888888      888       888  888 88888888
+888        888  888 Y88b 888 888 Y8b.          888       Y88b 888 Y8b.     
+8888888888 "Y888888  "Y88888 888  "Y8888       8888888888 "Y88888  "Y8888  
+                         888                                  888         
+                    Y8b d88P                             Y8b d88P         
+                     "Y88P"                               "Y88P"          
+"""
+        elif self.w >= 49:
+            return """
+8""""                           8""""             
+8     eeeee eeeee e     eeee    8     e    e eeee 
+8eeee 8   8 8   8 8     8       8eeee 8    8 8    
+88    8eee8 8e    8e    8eee    88    8eeee8 8eee 
+88    88  8 88 "8 88    88      88      88   88   
+88eee 88  8 88ee8 88eee 88ee    88eee   88   88ee
+"""
+        elif self.w >= 26:
+            return """
+.___      .     .___      
+[__  _. _ | _   [__   . _ 
+[___(_](_]|(/,  [___\_|(/,
+       ._|          ._|   
+"""
+
+    @property
     def w(self):
         return shutil.get_terminal_size((80, 25)).columns
+
+    def print_splash(self):
+        print(self.banner)
+        try:
+            owner = f'| User ID:   {bot.user.id}\n'
+        except:
+            owner = ""
+        print(f'#-------------------------------#\n'
+              f'| Successfully logged in.\n'
+              f'#-------------------------------#\n'
+              f'| Username:  {bot.user.name}\n'
+              f'| User ID:   {bot.user.id}\n'
+              f'{owner}'
+              f'# ------------------------------#\n')
 
     def check_update(self):
         w = self.w
@@ -88,7 +136,6 @@ class Listeners:
             roles.append((c.id, c.name))
 
         return content, members, roles, channels
-
 
     # Checks
 
@@ -177,8 +224,8 @@ class Listeners:
 async def on_ready():
     bot.loop.create_task(init_timed_events(bot))
     bot.add_cog(Listeners(bot))
+    await sleep(1)
     await bot.change_presence(status=discord.Status.idle, afk=True)
-    print("Started successfully.\n")
 
 
 if __name__ == "__main__":
