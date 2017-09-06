@@ -18,7 +18,7 @@ except:
 
 
 bot = commands.Bot(command_prefix=")(90f3lkFDlEWo23nmROl24=R{;'afg4gf-", self_bot=True)
-bot.w = lambda x: shutil.get_terminal_size((80, 25)).columns
+bot.w = lambda: shutil.get_terminal_size((80, 25)).columns
 
 @bot.listen()
 async def timer_update(seconds):
