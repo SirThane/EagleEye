@@ -229,7 +229,7 @@ async def on_ready():
         bot.owner = None
     bot.loop.create_task(init_timed_events(bot))
     bot.add_cog(Listeners(bot))
-    await sleep(1)
+    await sleep(5)
     await bot.change_presence(status=discord.Status.idle, afk=True)
 
 
